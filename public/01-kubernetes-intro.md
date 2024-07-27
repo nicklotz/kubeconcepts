@@ -178,7 +178,7 @@ kubectl describe deployments nginx-deployment
 
 > A key purpose of declarative configuration is to prevent drift. That is, if Kubernetes detects a change, it will perform the necessary work to bring the state of the cluster back to the source of truth, which is our YAML configuration.
 
-1. Manually remove a pod from the NGINX deployment.
+1. Manually remove the pods from the NGINX deployment.
 ```
 kubectl delete pod -l app=nginx
 ```
@@ -190,8 +190,10 @@ watch kubectl get pods
 
 > What action(s) did Kubernetes perform in response to the pod being removed?
 
-3. Explore recent deployment events to see how Kubernetes responded.
+3. Explore recent cluster events to see how Kubernetes responded.
 ```
-kubectl describe deployments nginx-deployment
-``` 
+kubectl get events --sort-by='.lastTimestamp'
+```
+
+> What happens if you delete just one pod in the deployment? Try it.
 
