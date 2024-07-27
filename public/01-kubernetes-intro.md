@@ -117,5 +117,48 @@ curl http://localhost:8001/api/
 
 > **Declarative**: "Here is the end result I want. Kubernetes, make it happen"
 
-1. 
+1. Create a directory to hold your NGINX deployment configuration.
+```
+mkdir mynginxdeployment/
+```
+```
+cd mynginxdeployment/
+```
+
+2. Populate a file containing the NGINX deployment configuration.
+```
+cat << EOF > mynginxdeployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+EOF
+```
+
+> **Deployment** is the type of Kubernetes resource, i.e. a set of one or more pods representing an application workload.
+
+> **Replicas** are how many instances of the deployment pods to run at a time. Important for scaling.
+
+> **Image** is which container image to use for the deployment.
+
+3. Apply the deployment to the cluster.
+```
+kubectl apply -f mynginxdeployment.yaml
+```
+
 
