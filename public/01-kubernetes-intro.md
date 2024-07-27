@@ -256,7 +256,14 @@ sed -i 's/ready//g' mynginxdeployment.yaml
 cat mynginxdeployment.yaml 
 ```
 
-9. Update the existing deployment.
+8. Update the existing deployment.
 ```
 kubectl apply -f mynginxdeployment.yaml
-``` 
+```
+
+9. Watch the current pods and their readiness.
+```
+watch kubectl get pods
+```
+
+> How did Kubernetes go about updating, and healing, the deployment?
