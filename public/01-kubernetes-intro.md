@@ -205,7 +205,12 @@ kubectl get events --sort-by='.lastTimestamp'
 
 > **Rediness** probes determine whether a container is ready to start accepting traffic.
 
-1. Modify mynginxdeployment.yaml.
+1. Remove the existing deployment.
+```
+kubectl delete -f mynginxdeployment.yaml
+```
+
+2. Modify mynginxdeployment.yaml.
 ```
 cat << EOF >> mynginxdeployment.yaml
         livenessProbe:
@@ -218,3 +223,40 @@ cat << EOF >> mynginxdeployment.yaml
             port: 80
 EOF
 ```
+
+3. Reapply the deployment with the updated configuration.
+```
+kubectl apply -f mynginxdeployment.yaml
+```
+
+4. Observe the pods.
+```
+kubectl get pods
+```
+
+> How many pods are available and healthy?
+
+5. Look at recent pod events for the deployment.
+```
+kubectl describe pods -l app=nginx-deployment
+```
+
+> Why are the liveness and readiness checks failing? Do the **/healthz** and **/ready** endpoints exist?
+
+6. Modify the liveness and readiness probes to change which paths are queried in the NGINX deployment.
+```
+sed -i 's/healthz//g' mynginxdeployment.yaml
+```
+```
+sed -i 's/ready//g' mynginxdeployment.yaml
+```
+
+7. Confirm the updated content of **mynginxdeployment.yaml**.
+```
+cat mynginxdeployment.yaml 
+```
+
+9. Update the existing deployment.
+```
+kubectl apply -f mynginxdeployment.yaml
+``` 
