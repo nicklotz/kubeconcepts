@@ -1,6 +1,6 @@
 # Lab 01: Kubernetes Intro
 
-# A. (Optional) Install K3D
+## A. (Optional) Install K3D
 
 > If you are using Rancher Desktop or Docker Desktop, you should have Kubernetes installed already and can skip to part **B**.
 
@@ -21,7 +21,7 @@ k3d cluster create -p "80:80@loadbalancer" -p "443:443@loadbalancer"
 kubectl cluster-info
 ```
 
-# B. Core Kubernetes Components
+## B. Core Kubernetes Components
 
 > The **kube-system** namespace contains the core services that manages Kubernetes itself.
 
@@ -40,7 +40,7 @@ kubectl get services -n kube-system
 kubectl get pods -n kube-system
 ```
 
-# C. Interacting with the Kubernetes API
+## C. Interacting with the Kubernetes API
 
 > The **kubectl command** is the primary means to **imperatively** manage Kubernetes. <br/>
 > Later we'll walk through best-practices for declarative resource management.
@@ -109,5 +109,13 @@ fg 1
 curl http://localhost:8001/api/
 ```
 
+## D. Declarative and Desired State
 
+> Previously, we created an *imperative*, ad hoc deployment of NGINX. Kubernetes is designed to be *declarative* in its management.
+
+> **Imperative**: "Do this, then this, then that, in order."
+
+> **Declarative**: "Here is the end result I want. Kubernetes, make it happen"
+
+1. 
 
