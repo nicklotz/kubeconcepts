@@ -40,4 +40,74 @@ kubectl get services -n kube-system
 kubectl get pods -n kube-system
 ```
 
+# C. Interacting with the Kubernetes API
+
+> The **kubectl command** is the primary means to **imperatively** manage Kubernetes. <br/>
+> Later we'll walk through best-practices for declarative resource management.
+
+1. Create a simple NGINX deployment.
+```
+kubectl create deployment nginx --image=nginx
+```
+
+2. Describe the deployment.
+```
+kubectl describe deployment nginx
+```
+
+3. Inspect the deployment at the pod level.
+```
+kubectl get pods
+```
+
+4. Delete the deployment
+```
+kubectl delete deployment nginx
+```
+
+5. Attempt to query the Kubernetes API directly.
+```
+curl http://localhost:8001/api/
+```
+
+> What error do you see? Why do you see it?
+
+5. Create a temporary local gateway to the Kubernetes API that runs in the background.
+```
+kubectl proxy > /dev/null 2>&1 &
+```
+
+6. Verify the proxy is running in the background.
+```
+jobs
+```
+
+7. Query the Kubernetes API directly.
+```
+curl http://localhost:8001/api/
+```
+
+8. Query information about cluster nodes.
+```
+curl http://localhost:8001/api/v1/nodes
+```
+
+9. Query information about cluster namespaces.
+```
+curl http://localhost:8001/api/v1/namespaces
+```
+
+10. Bring the proxy process back to the foreground.
+```
+fg 1
+```
+
+11. Type **CTRL-C** to kill the process.
+
+12. Attempt to query the API again.
+```
+curl http://localhost:8001/api/
+```
+
+
 
