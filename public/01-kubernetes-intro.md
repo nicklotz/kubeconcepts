@@ -197,3 +197,24 @@ kubectl get events --sort-by='.lastTimestamp'
 
 > What happens if you delete just one pod in the deployment? Try it.
 
+## F. Health Checks
+
+> Health checks are ways to ensure how deployments and pods are reachable and working as expected before they can be used.
+
+> **Liveness** probes determine whether a container should be restarted, i.e. whether or not it is "live" or in a deadlock.
+
+> **Rediness** probes determine whether a container is ready to start accepting traffic.
+
+1. Modify mynginxdeployment.yaml.
+```
+cat << EOF >> mynginxdeployment.yaml
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+EOF
+```
