@@ -161,4 +161,37 @@ EOF
 kubectl apply -f mynginxdeployment.yaml
 ```
 
+4. Explore the deployment and pods.
+```
+kubectl get deployments nginx-deployment
+```
+```
+kubectl get pods
+```
+```
+kubectl describe deployments nginx-deployment
+```
+
+> Why are there two pods running but only one deployment?
+
+## E. Reconciling State
+
+> A key purpose of declarative configuration is to prevent drift. That is, if Kubernetes detects a change, it will perform the necessary work to bring the state of the cluster back to the source of truth, which is our YAML configuration.
+
+1. Manually remove a pod from the NGINX deployment.
+```
+kubectl delete pod -l app=nginx
+```
+
+2. Observe the number of pods in the deployment.
+```
+watch kubectl get pods
+```
+
+> What action(s) did Kubernetes perform in response to the pod being removed?
+
+3. Explore recent deployment events to see how Kubernetes responded.
+```
+kubectl describe deployments nginx-deployment
+``` 
 
