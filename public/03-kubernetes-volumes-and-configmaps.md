@@ -233,7 +233,7 @@ kubectl get configmaps myliteralappconfig -o yaml
 mkdir ~/myappconfigmapfile
 ```
 ```
-cd ~/myappconfigmappfile
+cd ~/myappconfigmapfile
 ```
 ```
 cat << EOF > app.properties
