@@ -89,3 +89,122 @@ kubectl describe pod hostpath-pod
 ```
 kubectl delete -f myhostpathpod.yaml
 ```
+
+## C. Persistent Volumes and Persistent Volume Claims
+
+> A persistent volume allocates a chunk of storage. A persistent volume claim tells Kubernetes that a pod or deployment is claiming a PV, so no one else can.
+
+> Let's create a unified NGINX deployemnt that writes to persistent storage.
+
+1. Create a populate a unified manifest.
+```
+mkdir ~/myunifiednginx/
+```
+```
+cd ~/myunifiednginx/
+```
+```
+cat << EOF > myunifiednginx.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /mnt/nginx
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-storage
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-storage
+        persistentVolumeClaim:
+          claimName: nginx-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30007
+    protocol: TCP
+  selector:
+    app: nginx
+EOF
+```
+
+2. Apply the manifest.
+```
+kubectl apply -f myunifiednginx.yaml
+```
+
+3. Check the provisioned resources.
+```
+kubectl get pv
+```
+```
+kubectl get pvc
+```
+```
+kubectl get deployments
+```
+```
+kubectl get pods
+```
+```
+kubectl get svc
+```
+
+4. Clean up.
+```
+kubectl delete -f myunifiednginx.yaml
+```
+```
+kubectl delete pvc --all
+```
+```
+kubectl delete pv --all
+```
