@@ -203,5 +203,97 @@ kubectl get jobs --watch
 kubectl delete -f mycronjob.yaml
 ```
 
+## D. Networking and Services
+
+> In Kubernetes, Services are resources that expose application networking to other pods in the cluster, or to resources outside the cluster.
+
+1. Create a new NGINX deployment.
+```
+kubectl create deployment nginx --image=nginx
+```
+
+2. Expose the NGINX deployment as a service.
+```
+kubectl expose deployment nginx --port=80 --type=ClusterIP
+```
+
+3. Show the service configuration.
+```
+kubectl get svc nginx
+```
+
+4. Scale the NGINX deployment to multiple replicas.
+```
+kubectl scale deployment nginx --replicas=3
+```
+
+5. Test accessing the service via a temporary interactive pod and observe the logs.
+```
+kubectl run -it --rm debug --image=busybox -- sh wget -O- nginx
+```
+```
+kubectl logs -l app=nginx --tail=10
+```
+
+> Which pods are being accessed? What does this say about load balancing?
+
+6. Modify the existing service to a NodePort to expose it externally.
+```
+kubectl edit svc nginx
+```
+- Change `type: ClusterIP` to `type: NodePort`
+
+7. Check the NodePort configuration.
+```
+kubectl get svc nginx
+```
+
+8. View the service endpoints.
+```
+kubectl get endpoints nginx
+```
+
+9. Create a headless NGINX service.
+
+> Headless services allow clients to connect to a pod directly. This is accomplished by setting the ClusterIP to `none`.
+
+```
+cat << EOF > myheadlessnginxservice.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless
+spec:
+  clusterIP: None
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+EOF
+```
+
+10. Apply the configuration.
+```
+kubectl apply -f nginx-headless.yaml
+```
+
+11. Verify DNS resolution within a pod.
+```
+kubectl run -it --rm debug --image=busybox -- sh
+```
+```
+nslookup nginx-headless
+```
+
+12. Clean up resources.
+```
+kubectl delete svc --all
+```
+```
+kubectl delete deployment --all
+```
+
+
 
 
