@@ -282,7 +282,7 @@ EOF
 
 10. Apply the configuration.
 ```
-kubectl apply -f nginx-headless.yaml
+kubectl apply -f myheadlessnginxservice.yaml
 ```
 
 11. Verify DNS resolution within a pod.
