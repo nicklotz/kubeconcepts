@@ -153,5 +153,55 @@ kubectl delete -f mysqlstatefulset.yaml
 kubectl delete pvc --all
 ```
 
+## C. CronJobs
+
+> Kubernetes has a cron scheduler that makes it easy to run tasks on a schedule.
+
+1. Create and change into a new directory to hold a CronJob configuration.
+```
+mkdir ~/mycronjob/
+```
+```
+cd ~/mycronjob/
+```
+
+2. Populate a file containing the CronJob configuration.
+```
+cat << EOF > mycronjob.yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: echo-job
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: echo
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+EOF
+```
+3. Apply the configuration.
+```
+kubectl apply -f mycronjob.yaml
+```
+
+4. Watch the task execution.
+```
+kubectl get jobs --watch
+```
+
+5. Clean up resources.
+```
+kubectl delete -f mycronjob.yaml
+```
+
 
 
