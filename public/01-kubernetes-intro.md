@@ -267,3 +267,8 @@ watch kubectl get pods
 ```
 
 > How did Kubernetes go about updating, and healing, the deployment?
+
+10. Clean up resources.
+```
+kubectl delete -f mynginxdeployment.yaml
+```
