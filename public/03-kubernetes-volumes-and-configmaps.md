@@ -208,3 +208,114 @@ kubectl delete pvc --all
 ```
 kubectl delete pv --all
 ```
+
+## D. ConfigMaps and Secrets
+
+> ConfigMaps are Kubernetes resources designed to store *non-sensitive*, *structured* data.
+
+> Secrets are Kubernetes resources designed to store *sensitive* data.
+
+> By default, both are stored in an unencrypted key-value store called **etcd**.
+
+> It is strongly recommended to use a third party service like Vault that stores secrets encrypted at rest.
+
+1. First, let's create a ConfigMap from literal, passed-in values.
+
+```
+kubectl create configmap myliteralappconfig --from-literal=app.color=hazel --from-literal=app.env=production
+```
+```
+kubectl get configmaps myliteralappconfig -o yaml
+```
+
+2. You can also create a ConfigMap from a file.
+```
+mkdir ~/myappconfigmapfile
+```
+```
+cd ~/myappconfigmappfile
+```
+```
+cat << EOF > app.properties
+background=colorful
+server=nginxprod
+EOF
+```
+```
+kubectl create configmap myappfileconfigmap --from-file=app.properties
+```
+```
+kubectl describe configmaps myappfileconfigmap
+```
+
+3. Next, we can create a deployment that uses a ConfigMap.
+```
+mkdir ~/mydeploymentwithconfigmap
+```
+```
+cd ~/mydeploymentwithconfigmap
+```
+```
+cat << EOF > mydeploymentwithconfigmap.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        env:
+          - name: APP_COLOR
+            valueFrom:
+              configMapKeyRef:
+                name: myliteralappconfig
+                key: app.color
+          - name: APP_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: myliteralappconfig
+                key: app.env
+      restartPolicy: Always
+EOF
+```
+```
+kubectl apply -f mydeploymentwithconfigmap.yaml
+```
+```
+kubectl describe mydeploymentwithconfigmap.yaml
+```
+
+4. Now let's work with secrets. Create a decode an application secret.
+```
+kubectl create secret generic appsecret --from-literal=username=admin --from-literal=password=secret
+```
+```
+kubectl get secrets
+```
+```
+kubectl get secret appsecret -o jsonpath="{.data.username}" | base64 --decode
+echo
+```
+```
+kubectl get secret appsecret -o jsonpath="{.data.password}" | base64 --decode
+echo
+```
+
+
+
+
+
+
+
+
+
