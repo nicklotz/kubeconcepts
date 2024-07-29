@@ -292,6 +292,9 @@ kubectl run -it --rm debug --image=busybox -- sh
 ```
 nslookup nginx-headless
 ```
+```
+exit
+```
 
 12. Clean up resources.
 ```
