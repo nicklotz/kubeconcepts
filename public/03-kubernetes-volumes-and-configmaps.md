@@ -29,6 +29,7 @@ spec:
   volumes:
   - name: cache-volume
     emptyDir: {}
+EOF
 ```
 
 2. Apply and inspect the configuration.
