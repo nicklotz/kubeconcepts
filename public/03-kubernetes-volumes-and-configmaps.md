@@ -292,7 +292,7 @@ EOF
 kubectl apply -f mydeploymentwithconfigmap.yaml
 ```
 ```
-kubectl describe mydeploymentwithconfigmap.yaml
+kubectl describe app-deployment
 ```
 
 4. Now let's work with secrets. Create a decode an application secret.
