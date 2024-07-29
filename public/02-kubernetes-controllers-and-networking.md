@@ -149,6 +149,9 @@ kubectl get pvc
 ```
 kubectl delete -f mysqlstatefulset.yaml
 ```
+```
+kubectl delete pvc --all
+```
 
 
 
