@@ -168,7 +168,7 @@ cd ~/mycronjob/
 2. Populate a file containing the CronJob configuration.
 ```
 cat << EOF > mycronjob.yaml
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: echo-job
