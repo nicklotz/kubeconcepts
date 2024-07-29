@@ -229,7 +229,14 @@ kubectl scale deployment nginx --replicas=3
 
 5. Test accessing the service via a temporary interactive pod and observe the logs.
 ```
-kubectl run -it --rm debug --image=busybox -- sh wget -O- nginx
+kubectl run -it --rm debug --image=busybox -- sh
+```
+```
+wget -O- nginx
+```
+> Run the above wget command several times, then exit out of the container and check the logs.
+```
+exit
 ```
 ```
 kubectl logs -l app=nginx --tail=10
