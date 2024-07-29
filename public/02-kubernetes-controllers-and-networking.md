@@ -115,7 +115,7 @@ spec:
       name: mysql-data
     spec:
       accessModes: ["ReadWriteOnce"]
-      storageClassName: "standard"
+      storageClassName: "local-path"
       resources:
         requests:
           storage: 2Gi
