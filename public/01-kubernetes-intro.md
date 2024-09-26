@@ -22,6 +22,21 @@ kubectl cluster-info
 ```
 
 ## B. Core Kubernetes Components
+### Kubernetes architecture simplified
+```mermaid
+graph TD
+    A[Kubernetes] --> B[Master Node]
+    A --> C[Worker Node]
+
+    B --> D[API Server]
+    B --> E[Scheduler]
+    B --> F[Controller Manager]
+    B --> G[etcd]
+
+    C --> H[Kubelet]
+    C --> I[Kube Proxy]
+    C --> J[Pods]
+```
 
 > The **kube-system** namespace contains the core services that manages Kubernetes itself.
 
