@@ -132,6 +132,10 @@ curl http://localhost:8001/api/
 
 > **Declarative**: "Here is the end result I want. Kubernetes, make it happen"
 
+- A Kubernetes **manifest** is a declarative YAML (or JSON) file. It defines the `desired` state of Kubernetes resources like Pods, Deployments, Services, etc
+- Kubernetes manages app state by continuously reconciling the desired state (defined in the manifest) with the actual state of the system using controllers and the control loop
+- Kubernetes self-heals, scales, and updates applications automatically to ensure that the system remains in the desired state
+
 1. Create a directory to hold your NGINX deployment configuration.
 ```
 mkdir mynginxdeployment/
