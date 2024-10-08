@@ -67,3 +67,7 @@ kubectl get pods
 ```
 kubectl logs $(kubectl get pods -l app=mymulticontainerapp -o jsonpath='{.items[0].metadata.name}') -c mylogsidecar
 ```
+
+##. Traffic Management with Istio
+
+- Refer to the [Istio getting started guide](https://istio.io/latest/docs/setup/getting-started/) for installing Istio and deploying a sample app.
