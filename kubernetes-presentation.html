@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Fundamentals - Day 2</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/black.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --k8s-blue: #326ce5;
+            --k8s-light: #54a3ff;
+            --k8s-dark: #1a3a5c;
+            --k8s-white: #FFFFFF;
+            --k8s-gray: #6B7280;
+        }
+
+        .reveal { background: linear-gradient(135deg, #0a1628 0%, #1a2d4a 100%); }
+        .reveal h1, .reveal h2, .reveal h3 { text-transform: none; color: var(--k8s-light); }
+        .reveal h1 { color: var(--k8s-white); }
+        .reveal section { text-align: left; }
+        .reveal section.center { text-align: center; }
+        .reveal pre { width: 100%; }
+        .reveal code { background: #1e3a5f; padding: 2px 8px; border-radius: 3px; }
+        .highlight { color: var(--k8s-light); }
+        .highlight-gold { color: #FBBF24; }
+
+        .topic-arch { color: #60A5FA; }
+        .topic-pods { color: #34D399; }
+        .topic-config { color: #F472B6; }
+        .topic-services { color: #A78BFA; }
+        .topic-deploy { color: #FBBF24; }
+
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .three-column { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        .small-text { font-size: 0.65em; }
+        .tiny-text { font-size: 0.55em; }
+
+        .reveal h1 { font-size: 2.2em; margin-bottom: 0.5em; }
+        .reveal h2 { font-size: 1.6em; margin-bottom: 0.5em; margin-top: 0; }
+        .reveal h3 { font-size: 1.2em; margin-top: 1.2rem; margin-bottom: 0.6rem; }
+        .reveal h4 { font-size: 1em; margin-top: 1rem; margin-bottom: 0.4rem; }
+        .reveal ul, .reveal ol { margin-top: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85em; }
+        .reveal li { margin-bottom: 0.3rem; line-height: 1.3; }
+        .reveal p { margin: 0.5rem 0; font-size: 0.85em; line-height: 1.4; }
+
+        .reveal .slides section {
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        .topic-card {
+            background: rgba(50, 108, 229, 0.1);
+            border-left: 4px solid var(--k8s-blue);
+            padding: 0.6rem;
+            margin: 0.4rem 0;
+            font-size: 0.85em;
+        }
+        .topic-card ul, .topic-card ol { margin: 0.3rem 0; }
+        .topic-card li { margin-bottom: 0.2rem; }
+
+        .lab-slide {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            border: 3px solid #34D399;
+        }
+        .lab-slide h2 { color: #34D399; }
+
+        .reveal table {
+            font-size: 0.7em;
+            margin: 0.5rem 0;
+        }
+        .reveal table td, .reveal table th {
+            padding: 0.3rem 0.5rem;
+        }
+
+        .day-header {
+            background: var(--k8s-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.7em;
+            overflow-x: auto;
+        }
+
+        .command { color: #60A5FA; }
+        .string { color: #34D399; }
+        .comment { color: #6B7280; }
+        .keyword { color: #F472B6; }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section class="center">
+                <h1>Kubernetes Fundamentals</h1>
+                <h3>Container Orchestration at Scale</h3>
+                <p style="margin-top: 2rem; color: var(--k8s-gray);">Containerization Fast Track - Day 2</p>
+            </section>
+
+            <!-- Course Overview -->
+            <section>
+                <h2>Course Overview</h2>
+                <p>Learn Kubernetes system architecture and the declarative approach to managing containerized applications.</p>
+
+                <h3>What You'll Learn</h3>
+                <div class="two-column small-text">
+                    <div>
+                        <ul>
+                            <li>Why container orchestration is needed</li>
+                            <li>Kubernetes architecture and components</li>
+                            <li>Pods, probes, and health checks</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul>
+                            <li>ConfigMaps and Secrets</li>
+                            <li>Services and networking</li>
+                            <li>Deployments and scaling</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="topic-card" style="margin-top: 1rem;">
+                    <p><strong>Prerequisites:</strong> Docker fundamentals from Day 1</p>
+                </div>
+            </section>
+
+            <!-- Agenda -->
+            <section>
+                <h2>Day 2 Agenda</h2>
+                <div class="two-column small-text">
+                    <div class="topic-card">
+                        <h4 class="topic-arch">Morning</h4>
+                        <ul>
+                            <li>Why Orchestration?</li>
+                            <li>Kubernetes Architecture</li>
+                            <li>Declarative Configuration</li>
+                            <li>Pods and Health Checks</li>
+                        </ul>
+                    </div>
+                    <div class="topic-card">
+                        <h4 class="topic-services">Afternoon</h4>
+                        <ul>
+                            <li>ConfigMaps and Secrets</li>
+                            <li>Multi-Container Pods</li>
+                            <li>Services and Networking</li>
+                            <li>Deployments and Scaling</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Why Orchestration -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 1</h3>
+                </div>
+                <h1 class="topic-arch">Why Container Orchestration?</h1>
+            </section>
+
+            <!-- Challenges at Scale -->
+            <section>
+                <h2 class="topic-arch">Challenges at Scale</h2>
+
+                <p>Running containers in production introduces significant challenges.</p>
+
+                <div class="three-column small-text">
+                    <div class="topic-card">
+                        <h4>Deployment</h4>
+                        <ul>
+                            <li>Multi-host deployment</li>
+                            <li>Rolling updates</li>
+                            <li>Rollbacks</li>
+                        </ul>
+                    </div>
+                    <div class="topic-card">
+                        <h4>Operations</h4>
+                        <ul>
+                            <li>Scaling up/down</li>
+                            <li>Health monitoring</li>
+                            <li>Self-healing</li>
+                        </ul>
+                    </div>
+                    <div class="topic-card">
+                        <h4>Networking</h4>
+                        <ul>
+                            <li>Service discovery</li>
+                            <li>Load balancing</li>
+                            <li>DNS</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="topic-card fragment" style="margin-top: 1rem;">
+                    <p><strong>Question:</strong> How do you manage thousands of containers across hundreds of hosts?</p>
+                </div>
+            </section>
+
+            <!-- What is an Orchestrator -->
+            <section>
+                <h2 class="topic-arch">What is an Orchestrator?</h2>
+
+                <p>A system that automates deployment, management, scaling, and networking of containers.</p>
+
+                <h3>Key Functions</h3>
+                <ul>
+                    <li class="fragment"><strong>Scheduling:</strong> Decide which server runs each container</li>
+                    <li class="fragment"><strong>Scaling:</strong> Add or remove container instances</li>
+                    <li class="fragment"><strong>Self-Healing:</strong> Replace failed containers automatically</li>
+                    <li class="fragment"><strong>Service Discovery:</strong> Help services find each other</li>
+                    <li class="fragment"><strong>Load Balancing:</strong> Distribute traffic across instances</li>
+                </ul>
+            </section>
+
+            <!-- What is a Scheduler -->
+            <section>
+                <h2 class="topic-arch">What is a Scheduler?</h2>
+
+                <p>The scheduler decides which node should run a given container.</p>
+
+                <h3>Scheduling Process</h3>
+                <ol class="small-text">
+                    <li class="fragment">User submits a pod specification</li>
+                    <li class="fragment">Scheduler evaluates available nodes</li>
+                    <li class="fragment">Filters nodes that don't meet requirements</li>
+                    <li class="fragment">Scores remaining nodes</li>
+                    <li class="fragment">Assigns pod to highest-scoring node</li>
+                </ol>
+
+                <div class="topic-card fragment">
+                    <p><strong>Considerations:</strong> CPU, memory, node selectors, affinity rules, taints</p>
+                </div>
+            </section>
+
+            <!-- Section: Architecture -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 2</h3>
+                </div>
+                <h1 class="topic-arch">Kubernetes Architecture</h1>
+            </section>
+
+            <!-- Control Plane -->
+            <section>
+                <h2 class="topic-arch">Control Plane Components</h2>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Function</th>
+                    </tr>
+                    <tr>
+                        <td><strong>API Server</strong></td>
+                        <td>Frontend for Kubernetes; all communication goes through it</td>
+                    </tr>
+                    <tr>
+                        <td><strong>etcd</strong></td>
+                        <td>Distributed key-value store for all cluster data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scheduler</strong></td>
+                        <td>Assigns newly created pods to nodes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Controller Manager</strong></td>
+                        <td>Runs controller processes (Deployment, ReplicaSet, etc.)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Node Components -->
+            <section>
+                <h2 class="topic-arch">Node Components</h2>
+
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Function</th>
+                    </tr>
+                    <tr>
+                        <td><strong>kubelet</strong></td>
+                        <td>Agent ensuring containers run in pods on each node</td>
+                    </tr>
+                    <tr>
+                        <td><strong>kube-proxy</strong></td>
+                        <td>Network proxy maintaining network rules</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Container Runtime</strong></td>
+                        <td>Software running containers (containerd, CRI-O)</td>
+                    </tr>
+                </table>
+
+                <div class="topic-card fragment" style="margin-top: 1rem;">
+                    <p><strong>Note:</strong> The kube-system namespace contains these core system components</p>
+                </div>
+            </section>
+
+            <!-- Declarative Configuration -->
+            <section>
+                <h2 class="topic-arch">Declarative vs Imperative</h2>
+
+                <div class="two-column">
+                    <div>
+                        <h3>Imperative (How)</h3>
+                        <p class="small-text">"Do this, then this, then that"</p>
+                        <div class="code-block tiny-text">
+                            <pre><span class="command">kubectl create deployment nginx --image=nginx</span>
+<span class="command">kubectl scale deployment nginx --replicas=3</span>
+<span class="command">kubectl expose deployment nginx --port=80</span></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Declarative (What)</h3>
+                        <p class="small-text">"Here is the end state I want"</p>
+                        <div class="code-block tiny-text">
+                            <pre><span class="keyword">apiVersion</span>: apps/v1
+<span class="keyword">kind</span>: Deployment
+<span class="keyword">spec</span>:
+  <span class="keyword">replicas</span>: 3
+  ...</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="topic-card fragment">
+                    <p><strong>Best Practice:</strong> Use declarative YAML manifests for reproducibility and version control</p>
+                </div>
+            </section>
+
+            <!-- Desired State -->
+            <section>
+                <h2 class="topic-arch">Desired State and Reconciliation</h2>
+
+                <p>Kubernetes continuously works to make actual state match desired state.</p>
+
+                <div style="display: flex; justify-content: space-around; margin: 1.5rem 0;">
+                    <div class="topic-card" style="padding: 0.5rem 1rem; text-align: center;">
+                        <h4>Observe</h4>
+                        <p class="tiny-text">Monitor current state</p>
+                    </div>
+                    <div style="align-self: center;">→</div>
+                    <div class="topic-card" style="padding: 0.5rem 1rem; text-align: center;">
+                        <h4>Diff</h4>
+                        <p class="tiny-text">Compare to desired</p>
+                    </div>
+                    <div style="align-self: center;">→</div>
+                    <div class="topic-card" style="padding: 0.5rem 1rem; text-align: center;">
+                        <h4>Act</h4>
+                        <p class="tiny-text">Reconcile differences</p>
+                    </div>
+                </div>
+
+                <div class="topic-card fragment">
+                    <p><strong>Self-Healing:</strong> If a pod fails, Kubernetes automatically creates a replacement</p>
+                </div>
+            </section>
+
+            <!-- Section: Pods -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 3</h3>
+                </div>
+                <h1 class="topic-pods">Pods and Health Checks</h1>
+            </section>
+
+            <!-- What is a Pod -->
+            <section>
+                <h2 class="topic-pods">What is a Pod?</h2>
+
+                <p>The smallest deployable unit in Kubernetes - a group of one or more containers.</p>
+
+                <h3>Pod Characteristics</h3>
+                <ul>
+                    <li class="fragment">Containers in a pod share network namespace (localhost)</li>
+                    <li class="fragment">Containers share storage volumes</li>
+                    <li class="fragment">Pods are ephemeral - they can be replaced</li>
+                    <li class="fragment">Each pod gets its own IP address</li>
+                </ul>
+
+                <div class="code-block fragment small-text">
+                    <pre><span class="keyword">apiVersion</span>: v1
+<span class="keyword">kind</span>: Pod
+<span class="keyword">metadata</span>:
+  name: my-pod
+<span class="keyword">spec</span>:
+  <span class="keyword">containers</span>:
+  - name: nginx
+    image: nginx:1.24</pre>
+                </div>
+            </section>
+
+            <!-- Health Probes -->
+            <section>
+                <h2 class="topic-pods">Health Probes</h2>
+
+                <div class="two-column small-text">
+                    <div>
+                        <h3>Liveness Probe</h3>
+                        <p>Is the container alive?</p>
+                        <ul>
+                            <li>Detects deadlocks</li>
+                            <li>Failed = container restart</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Readiness Probe</h3>
+                        <p>Is the container ready for traffic?</p>
+                        <ul>
+                            <li>Detects startup delays</li>
+                            <li>Failed = removed from service</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="code-block fragment small-text" style="margin-top: 1rem;">
+                    <pre><span class="keyword">livenessProbe</span>:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 10
+
+<span class="keyword">readinessProbe</span>:
+  httpGet:
+    path: /ready
+    port: 8080</pre>
+                </div>
+            </section>
+
+            <!-- Multi-Container Pods -->
+            <section>
+                <h2 class="topic-pods">Multi-Container Pod Patterns</h2>
+
+                <table class="small-text">
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Use Case</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Sidecar</strong></td>
+                        <td>Auxiliary tasks (logging, monitoring)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ambassador</strong></td>
+                        <td>Proxy for external communication</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Adapter</strong></td>
+                        <td>Transform or standardize data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Init Container</strong></td>
+                        <td>Setup tasks before main container starts</td>
+                    </tr>
+                </table>
+
+                <div class="topic-card fragment">
+                    <p><strong>Example:</strong> Main app container + logging sidecar that forwards logs to external service</p>
+                </div>
+            </section>
+
+            <!-- Lab: Pods -->
+            <section class="lab-slide">
+                <h2>Lab: Working with Pods</h2>
+
+                <h3>Exercise Objectives</h3>
+                <ul>
+                    <li>Create pods using kubectl and YAML</li>
+                    <li>Configure liveness and readiness probes</li>
+                    <li>Observe self-healing behavior</li>
+                    <li>Explore multi-container pods</li>
+                </ul>
+            </section>
+
+            <!-- Section: ConfigMaps and Secrets -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 4</h3>
+                </div>
+                <h1 class="topic-config">ConfigMaps and Secrets</h1>
+            </section>
+
+            <!-- ConfigMaps -->
+            <section>
+                <h2 class="topic-config">ConfigMaps</h2>
+
+                <p>Store non-sensitive configuration data separately from container images.</p>
+
+                <div class="code-block small-text">
+                    <pre><span class="comment"># Create from literals</span>
+<span class="command">kubectl create configmap app-config \
+  --from-literal=log_level=info \
+  --from-literal=db_host=postgres</span>
+
+<span class="comment"># Create from file</span>
+<span class="command">kubectl create configmap app-config \
+  --from-file=config.properties</span></pre>
+                </div>
+
+                <h3 class="fragment">Using in Pods</h3>
+                <div class="code-block fragment tiny-text">
+                    <pre><span class="keyword">env</span>:
+  - name: LOG_LEVEL
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: log_level</pre>
+                </div>
+            </section>
+
+            <!-- Secrets -->
+            <section>
+                <h2 class="topic-config">Secrets</h2>
+
+                <p>Store sensitive data like passwords, tokens, and keys.</p>
+
+                <div class="code-block small-text">
+                    <pre><span class="comment"># Create secret</span>
+<span class="command">kubectl create secret generic db-secret \
+  --from-literal=username=admin \
+  --from-literal=password=secret123</span>
+
+<span class="comment"># View secret (base64 encoded)</span>
+<span class="command">kubectl get secret db-secret -o yaml</span>
+
+<span class="comment"># Decode secret value</span>
+<span class="command">kubectl get secret db-secret \
+  -o jsonpath="{.data.password}" | base64 --decode</span></pre>
+                </div>
+
+                <div class="topic-card fragment">
+                    <p><strong>Warning:</strong> Secrets are base64 encoded, not encrypted. Use external secret managers for production.</p>
+                </div>
+            </section>
+
+            <!-- ConfigMap vs Secrets -->
+            <section>
+                <h2 class="topic-config">ConfigMaps vs Secrets</h2>
+
+                <table>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>ConfigMap</th>
+                        <th>Secret</th>
+                    </tr>
+                    <tr>
+                        <td>Purpose</td>
+                        <td>Non-sensitive config</td>
+                        <td>Sensitive data</td>
+                    </tr>
+                    <tr>
+                        <td>Storage</td>
+                        <td>Plain text in etcd</td>
+                        <td>Base64 in etcd</td>
+                    </tr>
+                    <tr>
+                        <td>Size limit</td>
+                        <td>1 MB</td>
+                        <td>1 MB</td>
+                    </tr>
+                    <tr>
+                        <td>Examples</td>
+                        <td>URLs, feature flags</td>
+                        <td>Passwords, API keys</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Lab: Config -->
+            <section class="lab-slide">
+                <h2>Lab: ConfigMaps and Secrets</h2>
+
+                <h3>Exercise Objectives</h3>
+                <ul>
+                    <li>Create ConfigMaps from literals and files</li>
+                    <li>Create and decode Secrets</li>
+                    <li>Use ConfigMaps in pod definitions</li>
+                    <li>Mount Secrets as environment variables</li>
+                </ul>
+            </section>
+
+            <!-- Section: Services -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 5</h3>
+                </div>
+                <h1 class="topic-services">Services and Networking</h1>
+            </section>
+
+            <!-- What is a Service -->
+            <section>
+                <h2 class="topic-services">What is a Service?</h2>
+
+                <p>A stable network endpoint that provides access to a set of pods.</p>
+
+                <h3>Why Services?</h3>
+                <ul>
+                    <li class="fragment">Pods are ephemeral - IPs change</li>
+                    <li class="fragment">Services provide stable DNS names</li>
+                    <li class="fragment">Built-in load balancing</li>
+                    <li class="fragment">Service discovery via DNS</li>
+                </ul>
+
+                <div class="code-block fragment small-text">
+                    <pre><span class="keyword">apiVersion</span>: v1
+<span class="keyword">kind</span>: Service
+<span class="keyword">metadata</span>:
+  name: my-service
+<span class="keyword">spec</span>:
+  <span class="keyword">selector</span>:
+    app: myapp   <span class="comment"># Routes to pods with this label</span>
+  <span class="keyword">ports</span>:
+  - port: 80</pre>
+                </div>
+            </section>
+
+            <!-- Service Types -->
+            <section>
+                <h2 class="topic-services">Service Types</h2>
+
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Use Case</th>
+                    </tr>
+                    <tr>
+                        <td><strong>ClusterIP</strong></td>
+                        <td>Internal cluster IP only</td>
+                        <td>Internal services</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NodePort</strong></td>
+                        <td>Expose on each node's IP</td>
+                        <td>Development, testing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LoadBalancer</strong></td>
+                        <td>Cloud load balancer</td>
+                        <td>Production external access</td>
+                    </tr>
+                </table>
+
+                <div class="code-block fragment small-text" style="margin-top: 1rem;">
+                    <pre><span class="comment"># Expose deployment as NodePort</span>
+<span class="command">kubectl expose deployment nginx --port=80 --type=NodePort</span></pre>
+                </div>
+            </section>
+
+            <!-- Service Discovery -->
+            <section>
+                <h2 class="topic-services">Service Discovery</h2>
+
+                <p>Kubernetes provides built-in DNS for service discovery.</p>
+
+                <div class="code-block small-text">
+                    <pre><span class="comment"># Within same namespace</span>
+curl http://my-service
+
+<span class="comment"># Across namespaces</span>
+curl http://my-service.other-namespace
+
+<span class="comment"># Fully qualified</span>
+curl http://my-service.my-namespace.svc.cluster.local</pre>
+                </div>
+
+                <div class="topic-card fragment">
+                    <p><strong>Automatic:</strong> Services register DNS names automatically when created</p>
+                </div>
+            </section>
+
+            <!-- Section: Deployments -->
+            <section class="center">
+                <div class="day-header">
+                    <h3 style="margin: 0; color: white;">Module 6</h3>
+                </div>
+                <h1 class="topic-deploy">Deployments</h1>
+            </section>
+
+            <!-- What is a Deployment -->
+            <section>
+                <h2 class="topic-deploy">What is a Deployment?</h2>
+
+                <p>A controller that manages ReplicaSets and provides declarative updates for Pods.</p>
+
+                <h3>Key Features</h3>
+                <ul>
+                    <li class="fragment">Desired replica count</li>
+                    <li class="fragment">Rolling updates</li>
+                    <li class="fragment">Rollback capability</li>
+                    <li class="fragment">Scaling</li>
+                </ul>
+
+                <div class="code-block fragment small-text">
+                    <pre><span class="keyword">apiVersion</span>: apps/v1
+<span class="keyword">kind</span>: Deployment
+<span class="keyword">spec</span>:
+  <span class="keyword">replicas</span>: 3
+  <span class="keyword">selector</span>:
+    matchLabels:
+      app: nginx
+  <span class="keyword">template</span>:
+    <span class="keyword">spec</span>:
+      <span class="keyword">containers</span>:
+      - name: nginx
+        image: nginx:1.24</pre>
+                </div>
+            </section>
+
+            <!-- Scaling -->
+            <section>
+                <h2 class="topic-deploy">Scaling Deployments</h2>
+
+                <div class="code-block small-text">
+                    <pre><span class="comment"># Scale imperatively</span>
+<span class="command">kubectl scale deployment nginx --replicas=5</span>
+
+<span class="comment"># Scale declaratively (edit YAML)</span>
+<span class="keyword">spec</span>:
+  <span class="keyword">replicas</span>: 5
+
+<span class="comment"># Apply changes</span>
+<span class="command">kubectl apply -f deployment.yaml</span>
+
+<span class="comment"># Watch pods scale</span>
+<span class="command">kubectl get pods -w</span></pre>
+                </div>
+
+                <div class="topic-card fragment">
+                    <p><strong>Self-Healing:</strong> If you delete a pod, the Deployment creates a replacement to maintain replica count</p>
+                </div>
+            </section>
+
+            <!-- kubectl Commands -->
+            <section>
+                <h2 class="topic-deploy">Essential kubectl Commands</h2>
+
+                <div class="code-block small-text">
+                    <pre><span class="comment"># Apply configuration</span>
+<span class="command">kubectl apply -f deployment.yaml</span>
+
+<span class="comment"># Get resources</span>
+<span class="command">kubectl get pods,deployments,services</span>
+
+<span class="comment"># Describe for details</span>
+<span class="command">kubectl describe deployment nginx</span>
+
+<span class="comment"># View logs</span>
+<span class="command">kubectl logs &lt;pod-name&gt;</span>
+
+<span class="comment"># Execute command in pod</span>
+<span class="command">kubectl exec -it &lt;pod-name&gt; -- /bin/sh</span>
+
+<span class="comment"># Delete resources</span>
+<span class="command">kubectl delete -f deployment.yaml</span></pre>
+                </div>
+            </section>
+
+            <!-- Lab: Deployments -->
+            <section class="lab-slide">
+                <h2>Lab: Deployments and Services</h2>
+
+                <h3>Exercise Objectives</h3>
+                <ul>
+                    <li>Create Deployments from YAML manifests</li>
+                    <li>Scale deployments up and down</li>
+                    <li>Expose deployments as Services</li>
+                    <li>Test service discovery and load balancing</li>
+                </ul>
+            </section>
+
+            <!-- Course Summary -->
+            <section>
+                <h2>Day 2 Summary</h2>
+
+                <div class="three-column small-text">
+                    <div class="topic-card">
+                        <h4 class="topic-arch">Architecture</h4>
+                        <ul>
+                            <li>Control plane components</li>
+                            <li>Node components</li>
+                            <li>Declarative config</li>
+                        </ul>
+                    </div>
+                    <div class="topic-card">
+                        <h4 class="topic-pods">Workloads</h4>
+                        <ul>
+                            <li>Pods and probes</li>
+                            <li>ConfigMaps/Secrets</li>
+                            <li>Deployments</li>
+                        </ul>
+                    </div>
+                    <div class="topic-card">
+                        <h4 class="topic-services">Networking</h4>
+                        <ul>
+                            <li>Service types</li>
+                            <li>Service discovery</li>
+                            <li>Load balancing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="fragment">Key Takeaways</h3>
+                <ul class="fragment small-text">
+                    <li>Kubernetes automates container orchestration at scale</li>
+                    <li>Declarative configuration enables reproducible deployments</li>
+                    <li>Self-healing ensures application availability</li>
+                    <li>Services provide stable networking for dynamic pods</li>
+                </ul>
+            </section>
+
+            <!-- Next Steps -->
+            <section>
+                <h2>Continue Learning</h2>
+
+                <h3>Advanced Topics</h3>
+                <ul>
+                    <li>Persistent Volumes and Storage Classes</li>
+                    <li>Helm Charts for package management</li>
+                    <li>Ingress Controllers for HTTP routing</li>
+                    <li>RBAC and security policies</li>
+                    <li>Monitoring with Prometheus and Grafana</li>
+                </ul>
+
+                <h3 class="fragment">Resources</h3>
+                <ul class="fragment small-text">
+                    <li>kubernetes.io/docs - Official documentation</li>
+                    <li>Play with Kubernetes - Free online playground</li>
+                    <li>kubectl Cheat Sheet - Quick reference</li>
+                </ul>
+            </section>
+
+            <!-- Thank You -->
+            <section class="center">
+                <h1>Questions?</h1>
+                <p style="margin-top: 2rem; color: var(--k8s-gray);">Kubernetes Fundamentals - Day 2</p>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            plugins: [ RevealNotes, RevealHighlight ]
+        });
+    </script>
+</body>
+</html>
