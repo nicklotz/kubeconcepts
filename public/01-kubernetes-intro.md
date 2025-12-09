@@ -9,12 +9,12 @@
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 ```
 
-2. Create a custer.
+2. Create a cluster.
 ```
 k3d cluster create -p "80:80@loadbalancer" -p "443:443@loadbalancer"
 ```
 
-3. Follow [these instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) to install kubeclt on your OS and architecture.
+3. Follow [these instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/) to install kubectl on your OS and architecture.
 
 4. Verify kubectl can communicate with your k3d cluster.
 ```
@@ -85,10 +85,12 @@ kubectl delete deployment nginx
 curl http://localhost:8001/api/
 ```
 
-> What error do you see? Why do you see it?
+> What error do you see? You should see a "connection refused" error because the Kubernetes API server requires authentication. The `kubectl proxy` command creates an authenticated proxy to the API server.
 
 5. Create a temporary local gateway to the Kubernetes API that runs in the background.
 ```
+# > /dev/null discards stdout, 2>&1 redirects stderr to stdout
+# & runs the process in the background
 kubectl proxy > /dev/null 2>&1 &
 ```
 
@@ -128,9 +130,9 @@ curl http://localhost:8001/api/
 
 > Previously, we created an *imperative*, ad hoc deployment of NGINX. Kubernetes is designed to be *declarative* in its management.
 
-> **Imperative**: "Do this, then this, then that, in order."
+> **Imperative**: "Do this, then this, then that, in order." - You specify the exact steps to achieve a result. Example: `kubectl create deployment nginx --image=nginx`
 
-> **Declarative**: "Here is the end result I want. Kubernetes, make it happen"
+> **Declarative**: "Here is the end result I want. Kubernetes, make it happen." - You specify the desired state, and Kubernetes figures out how to achieve it. Example: Apply a YAML manifest describing the desired deployment.
 
 - A Kubernetes **manifest** is a declarative YAML (or JSON) file. It defines the `desired` state of Kubernetes resources like Pods, Deployments, Services, etc
 - Kubernetes manages app state by continuously reconciling the desired state (defined in the manifest) with the actual state of the system using controllers and the control loop
@@ -220,9 +222,9 @@ kubectl get events --sort-by='.lastTimestamp'
 
 > Health checks are ways to ensure how deployments and pods are reachable and working as expected before they can be used.
 
-> **Liveness** probes determine whether a container should be restarted, i.e. whether or not it is "live" or in a deadlock.
+> **Liveness** probes determine whether a container should be restarted. If the liveness probe fails, Kubernetes kills the container and restarts it. Use this to detect deadlocks or hung processes.
 
-> **Rediness** probes determine whether a container is ready to start accepting traffic.
+> **Readiness** probes determine whether a container is ready to accept traffic. If the readiness probe fails, the pod is removed from service endpoints but not restarted. Use this for startup delays or temporary unavailability.
 
 1. Remove the existing deployment.
 ```
@@ -257,13 +259,16 @@ kubectl get pods
 
 5. Look at recent pod events for the deployment.
 ```
-kubectl describe pods -l app=nginx-deployment
+kubectl describe pods -l app=nginx
 ```
 
-> Why are the liveness and readiness checks failing? Do the **/healthz** and **/ready** endpoints exist?
+> Why are the liveness and readiness checks failing? The `/healthz` and `/ready` endpoints don't exist in the default NGINX image. NGINX only serves content from `/` by default, so the probes are returning 404 errors.
 
-6. Modify the liveness and readiness probes to change which paths are queried in the NGINX deployment.
+6. Modify the liveness and readiness probes to change which paths are queried in the NGINX deployment. We'll change from `/healthz` and `/ready` to just `/` which NGINX serves by default.
 ```
+# sed -i performs in-place editing
+# 's/old/new/g' substitutes all occurrences of 'old' with 'new'
+# On macOS, use: sed -i '' 's/healthz//g' mynginxdeployment.yaml
 sed -i 's/healthz//g' mynginxdeployment.yaml
 ```
 ```

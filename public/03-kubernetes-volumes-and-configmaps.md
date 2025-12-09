@@ -1,6 +1,11 @@
 # Kubernetes Volumes, ConfigMaps, and Secrets
 
-> We'll begin our storage discussion with walking through the several different volume types supported in Kubernetes.
+> Kubernetes supports several volume types for different use cases:
+> - **emptyDir**: Temporary storage that exists only while the pod runs
+> - **hostPath**: Mounts a directory from the host node's filesystem
+> - **persistentVolumeClaim**: Requests durable storage that outlives the pod
+
+We'll explore each of these volume types in this lab.
 
 ## A. Temporary Working Volumes
 
@@ -94,7 +99,7 @@ kubectl delete -f myhostpathpod.yaml
 
 > A persistent volume allocates a chunk of storage. A persistent volume claim tells Kubernetes that a pod or deployment is claiming a PV, so no one else can.
 
-> Let's create a unified NGINX deployemnt that writes to persistent storage.
+> Let's create a unified NGINX deployment that writes to persistent storage.
 
 1. Create a populate a unified manifest.
 ```
@@ -222,9 +227,11 @@ kubectl delete pv --all
 1. First, let's create a ConfigMap from literal, passed-in values.
 
 ```
+# --from-literal creates key=value pairs directly from the command line
 kubectl create configmap myliteralappconfig --from-literal=app.color=hazel --from-literal=app.env=production
 ```
 ```
+# -o yaml outputs the full YAML representation of the ConfigMap
 kubectl get configmaps myliteralappconfig -o yaml
 ```
 
@@ -275,6 +282,7 @@ spec:
       - name: app
         image: nginx
         env:
+          # valueFrom references external ConfigMap instead of hardcoding values
           - name: APP_COLOR
             valueFrom:
               configMapKeyRef:
@@ -292,10 +300,11 @@ EOF
 kubectl apply -f mydeploymentwithconfigmap.yaml
 ```
 ```
-kubectl describe app-deployment
+# Describe the deployment to see the environment variable configuration
+kubectl describe deployment app-deployment
 ```
 
-4. Now let's work with secrets. Create a decode an application secret.
+4. Now let's work with secrets. Create and decode an application secret.
 ```
 kubectl create secret generic appsecret --from-literal=username=admin --from-literal=password=secret
 ```
@@ -303,12 +312,24 @@ kubectl create secret generic appsecret --from-literal=username=admin --from-lit
 kubectl get secrets
 ```
 ```
+# Secrets are stored base64-encoded (NOT encrypted!)
+# jsonpath extracts specific fields; base64 --decode converts back to plaintext
 kubectl get secret appsecret -o jsonpath="{.data.username}" | base64 --decode
 echo
 ```
 ```
 kubectl get secret appsecret -o jsonpath="{.data.password}" | base64 --decode
 echo
+```
+
+> **Important:** Base64 encoding is NOT encryption. Anyone with access to the secret can decode it. For production, use external secret managers like HashiCorp Vault or enable encryption at rest in etcd.
+
+## E. Clean Up
+
+```
+kubectl delete configmap myliteralappconfig myappfileconfigmap
+kubectl delete deployment app-deployment
+kubectl delete secret appsecret
 ```
 
 

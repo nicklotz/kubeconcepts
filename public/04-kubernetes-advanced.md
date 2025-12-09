@@ -1,6 +1,9 @@
 # Selected Advanced Kubernetes Topics
 
 ## A. Multi-Container Pods
+
+> Multi-container pods share the same network namespace (can communicate via localhost) and can share volumes. This enables powerful design patterns for extending container functionality without modifying the main application.
+
 ### Summary of design patterns for multi-container pods
 | **Pattern**           | **Use Case**                                                        | **Description**                                                                                 |
 |-----------------------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
@@ -15,7 +18,7 @@
 | **Work Queue**        | Asynchronously process tasks from a queue                           | Containers share and process tasks from a central queue                         |
 | **Logging Sidecar**   | Centralized log management                                          | Processes logs from the main container and forwards them to external services.|
 
-1. Create a manifest called **mymulticontainerdeployment**.
+1. Create a manifest called **mymulticontainerdeployment**. This example uses the **sidecar pattern** where a logging container reads logs from the main NGINX container via a shared volume.
 ```
 cat << EOF > mymulticontainerdeployment.yaml
 apiVersion: apps/v1
@@ -65,9 +68,33 @@ kubectl get pods
 
 4. Observe the logs in the sidecar container from one of the pods.
 ```
+# This command:
+# 1. Gets the name of the first pod with label app=mymulticontainerapp
+# 2. Retrieves logs specifically from the mylogsidecar container (-c flag)
 kubectl logs $(kubectl get pods -l app=mymulticontainerapp -o jsonpath='{.items[0].metadata.name}') -c mylogsidecar
 ```
 
-##. Traffic Management with Istio
+5. Generate some traffic to the NGINX container to see logs appear.
+```
+# Port-forward to access the NGINX container
+kubectl port-forward deployment/mymulticontainerdeployment 8080:80 &
+```
+```
+# Make some requests
+curl http://localhost:8080
+curl http://localhost:8080
+```
+```
+# Check the sidecar logs again - you should see the access logs
+kubectl logs $(kubectl get pods -l app=mymulticontainerapp -o jsonpath='{.items[0].metadata.name}') -c mylogsidecar
+```
+
+## B. Traffic Management with Istio
 
 - Refer to the [Istio getting started guide](https://istio.io/latest/docs/setup/getting-started/) for installing Istio and deploying a sample app.
+
+## C. Clean Up
+
+```
+kubectl delete -f mymulticontainerdeployment.yaml
+```

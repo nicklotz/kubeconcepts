@@ -1,8 +1,8 @@
 # Lab 02: Kubernetes Controllers and Networking
 
-> Every object in Kubernetes is managed by a **controller** that ensures the object matches its desired state configuration.
+> Every object in Kubernetes is managed by a **controller** - a control loop that watches the state of your cluster and makes changes to move the current state toward the desired state.
 
-> For example, the NGINX pods in the previous labs are managed by a deployment controller, ensuring the resource configurations match the deployment YAML.
+> For example, the NGINX pods in the previous labs are managed by a Deployment controller, which in turn creates a ReplicaSet controller to maintain the desired number of pod replicas.
 
 > We will now proceed to learn about other types of Kubernetes controllers their corresponding resources.
 
@@ -51,10 +51,11 @@ kubectl apply -f myfluentddaemonset.yaml
 
 4. Inspect the pod(s) that are deployed.
 ```
+# -o wide shows additional columns including the node where each pod runs
 kubectl get pods -o wide
 ```
 
-> The above command is useful for examining that identical **fluentd** pods are deployed to each node. Of course, in our lab setup we have only one node in the cluster.
+> The `-o wide` output shows which node each pod is running on. With a DaemonSet, you should see exactly one pod per node. In our single-node lab setup, you'll see one fluentd pod.
 
 5. Explore the DaemonSet details
 ```
@@ -122,7 +123,7 @@ spec:
 EOF
 ```
 
-> We haven't yet discussed persistent storage in Kubernetes. In this example, the StatefulSet will assign dedicated storage (called a Persistent Volume Claim) to each pod from whatever Storage Class is available to the cluster.
+> **Persistent Volume Claims (PVCs)** request storage from the cluster. A **Storage Class** defines what type of storage is available (e.g., SSD, network storage). The `local-path` storage class used here provisions storage on the local node's filesystem.
 
 3. Deploy the MySQL StatefulSet.
 ```
@@ -205,7 +206,7 @@ kubectl delete -f mycronjob.yaml
 
 ## D. Networking and Services
 
-> In Kubernetes, Services are resources that expose application networking to other pods in the cluster, or to resources outside the cluster.
+> **Services** provide stable network endpoints for accessing pods. Since pods are ephemeral and their IP addresses change, Services provide a consistent DNS name and IP that routes traffic to healthy pod instances.
 
 1. Create a new NGINX deployment.
 ```
@@ -229,12 +230,15 @@ kubectl scale deployment nginx --replicas=3
 
 5. Test accessing the service via a temporary interactive pod and observe the logs.
 ```
+# --rm automatically removes the pod when you exit
+# -it provides interactive terminal access
+# -- separates kubectl args from container command
 kubectl run -it --rm debug --image=busybox -- sh
 ```
 ```
 wget -O- nginx
 ```
-> Run the above wget command several times, then exit out of the container and check the logs.
+> Run the wget command several times, then exit the container and check the logs.
 ```
 exit
 ```
@@ -246,9 +250,12 @@ kubectl logs -l app=nginx --tail=10
 
 6. Modify the existing service to a NodePort to expose it externally.
 ```
+# kubectl edit opens the resource in your default editor (usually vi)
+# Save and exit to apply changes (:wq in vi)
 kubectl edit svc nginx
 ```
-- Change `type: ClusterIP` to `type: NodePort`
+- Find the line `type: ClusterIP` and change it to `type: NodePort`
+- Save and exit the editor
 
 7. Check the NodePort configuration.
 ```
@@ -262,7 +269,7 @@ kubectl get endpoints nginx
 
 9. Create a headless NGINX service.
 
-> Headless services allow clients to connect to a pod directly. This is accomplished by setting the ClusterIP to `none`.
+> **Headless services** (ClusterIP set to `None`) don't provide load balancing. Instead, DNS returns the IP addresses of all pods directly, allowing clients to implement their own load balancing or connect to specific pods.
 
 ```
 cat << EOF > myheadlessnginxservice.yaml
